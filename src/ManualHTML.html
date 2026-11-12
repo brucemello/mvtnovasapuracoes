@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Operação - Automação MVT</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #0056b3;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 28px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 30px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+            font-size: 22px;
+        }
+        h3 {
+            color: #4a5568;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        p {
+            margin: 10px 0;
+            color: #4a5568;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 15px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background-color: #f8fafc;
+            color: #1a202c;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+        code {
+            background-color: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #2d3748;
+        }
+        .highlight-box {
+            background-color: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .highlight-box p {
+            margin: 0;
+            color: #2b6cb0;
+            font-weight: 500;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-auto { background-color: #e6fffa; color: #234e52; }
+        .badge-manual { background-color: #feebc8; color: #744210; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📖 MANUAL DE OPERAÇÃO: AUTOMAÇÃO MVT & JIRA</h1>
+    <p>Este painel gerencia a integração automática entre o <strong>Jira Produção</strong>, o <strong>Google Forms</strong> de votação e os disparos de e-mails da Squad Tributos. O sistema opera de forma 100% autônoma, mas permite execuções manuais para testes e homologações.</p>
+
+    <h2>📅 Calendário de Execução Automática (Piloto Automático)</h2>
+    <p>O robô trabalha sozinho utilizando três gatilhos de tempo configurados no servidor. A tabela abaixo resume o comportamento mensal:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Momento do Mês</th>
+                <th>Função Executada</th>
+                <th>O que o robô faz na prática?</th>
+                <th>Alvo do E-mail</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>1º Dia Útil</strong><br><span class="badge badge-auto">Automático</span><br><i>(Entre 9h e 10h)</i></td>
+                <td><code>dispararMvtAutomaticoMensal</code></td>
+                <td>1. Varre o Jira do mês anterior.<br>2. Atualiza as opções do Formulário.<br>3. Envia o e-mail de abertura da votação com o prazo dinâmico de 2 dias úteis.</td>
+                <td><code>squad.tributos@totvs.com.br</code></td>
+            </tr>
+            <tr>
+                <td><strong>3º Dia Útil</strong><br><span class="badge badge-auto">Automático</span><br><i>(Entre 9h e 10h)</i></td>
+                <td><code>verificarEEnviarLembretesAutomatico</code></td>
+                <td>1. Cruza a aba <strong>TIME</strong> com quem já votou no Forms.<br>2. Filtra apenas votos dos últimos 4 dias.<br>3. Cobra individualmente apenas quem esqueceu.</td>
+                <td>Membros pendentes da aba <strong>TIME</strong></td>
+            </tr>
+            <tr>
+                <td><strong>1º Dia Útil</strong><br><span class="badge badge-auto">Automático</span><br><i>(Apenas Jan, Abr, Jul, Out)</i></td>
+                <td><code>ejecutarApuracaoTrimestralAutomatica</code></td>
+                <td>1. Abre a planilha de respostas externa.<br>2. Consolida os votos do trimestre anterior.<br>3. Coleta os feedbacks e envia o resultado para o Líder.</td>
+                <td><code>bruce.mello@totvs.com.br</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>🛠️ Como Utilizar o Menu Superior <code>MVT Jira</code></h2>
+    <p>Se você precisar antecipar um processo ou homologar os dados, use os comandos manuais direto na barra de menus da planilha:</p>
+
+    <h3>1. 🎛️ Abrir Painel de Controle <span class="badge badge-manual">Manual</span></h3>
+    <p>Abre a barra lateral direita para geração manual de cards de períodos específicos. Use se precisar rodar um MVT fora da data padrão ou reprocessar uma Sprint específica.</p>
+
+    <h3>2. 🔑 Configurar Token Jira <span class="badge badge-manual">Manual</span></h3>
+    <p>Armazena o seu <i>Personal Access Token</i> gerado no Jira Produção de forma criptografada nos servidores do Google. Só precisa ser feito uma única vez ou caso o seu token expire.</p>
+
+    <h3>3. 🔔 Forçar Lembrete Manual (Teste) <span class="badge badge-manual">Manual</span></h3>
+    <p>Simula o gatilho de cobrança imediatamente. O robô envia um e-mail de espelho <strong>apenas para você</strong> com a tag <code>[TESTE]</code>, listando no topo do texto quais e-mails seriam cobrados naquele momento se o disparo fosse o real.</p>
+
+    <h3>4. 🏆 Forçar Apuração Trimestral (Teste) <span class="badge badge-manual">Manual</span></h3>
+    <p>Gera o cálculo do MVT Trimestral instantaneamente na sua tela. Para facilitar seus testes em qualquer dia do ano, o modo manual ignora filtros rígidos de data e calcula <strong>todas as linhas atuais</strong> da sua planilha de respostas externa. Ele envia o e-mail formatado com o vencedor e as justificativas direto para você.</p>
+
+    <h2>🗂️ Estrutura e Governança das Abas</h2>
+    <p>Para que o código não quebre, mantenha a organização das abas conforme a regra de negócio do ecossistema:</p>
+    <ul>
+        <li><strong><code>TIME</code></strong>: Contém a lista de e-mails oficiais da equipe na <strong>Coluna A</strong> (a partir da linha 2). O script de cobrança usa essa lista como base comparativa.</li>
+        <li><strong><code>Logs</code></strong>: Gerada automaticamente pelo sistema. Registra o histórico de buscas (JQLs), horários de envio e diagnósticos de sucesso ou erro das funções.</li>
+        <li><strong><code>Respostas ao formulário 1</code> (Na Planilha Externa)</strong>: O banco de dados bruto onde o Forms descarrega os votos. O script acessa este arquivo remotamente através do ID configurado no código.</li>
+    </ul>
+
+    <div class="highlight-box">
+        <p>💡 Dica de Manutenção: O banco de dados do Google Forms acumula respostas infinitamente. Graças ao filtro de tempo inteligente implementado no script (janela de 4 dias para cobranças e travas trimestrais por data), você não precisa apagar ou limpar as respostas do formulário nunca. O histórico pode ficar guardado ali para consultas futuras sem interferir nos novos ciclos!</p>
+    </div>
+</div>
+
+</body>
+</html>
