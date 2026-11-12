@@ -31,7 +31,7 @@ const props={MVT_REF_ATUAL:'2026-10','MVT_RECONHECIMENTO_2026-09':'07/10/2026 17
 const ctx={console,
  Utilities:{formatDate:(d,tz,f)=>f.replace('yyyy',d.getFullYear()).replace('MM',p(d.getMonth()+1)).replace('dd',p(d.getDate())).replace('HH',p(d.getHours())).replace('mm',p(d.getMinutes())).replace('ss',p(d.getSeconds()))},
  Session:{getScriptTimeZone:()=>''},
- SpreadsheetApp:{getActiveSpreadsheet:()=>ss},
+ SpreadsheetApp:{getActiveSpreadsheet:()=>ctx.semPlanilhaAtiva?null:ss,openById:()=>ss},
  PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k]||null,setProperty:(k,v)=>props[k]=v})},
  FormApp:{openById:()=>({getResponses:()=>ctx.respostasForm,getPublishedUrl:()=>'https://docs.google.com/forms/d/e/x/viewform',canEditResponse:()=>ctx.formEditavel,setAllowResponseEdits:v=>{ctx.formEditavel=v;}}),ItemType:{LIST:'LIST',MULTIPLE_CHOICE:'MC',PARAGRAPH_TEXT:'P',TEXT:'T'}},
  MailApp:{sendEmail:o=>ctx.enviados.push(o)},enviados:[],respostasForm:[],formEditavel:true,sheets,props};

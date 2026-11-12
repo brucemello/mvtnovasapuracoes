@@ -21,6 +21,8 @@ const CONFIG = {
   ABA_HISTORICO: 'Historico',
   PROJETOS_PADRAO: ['dtripro', 'dtripro_capex', 'dsertaf4'],
 
+  // Planilha "Versão 2 MVT - Entregas Mês" (usada quando o script roda pelo link da Central, fora da planilha)
+  PLANILHA_MVT_ID: '1HKNhe-VzEr-Xq2jGSQ3EK09lNaxVL9hCiZEJcY4yxbc',
   GOOGLE_FORM_ID: '1VITo2E6Js1_reOMhdxch_dsiPEOTb_pQmTNnIG9UzE8',
   PLANILHA_RESPOSTAS_ID: '1rBbQtJwo25lExfoYqThcTsSAi_epZ4-G0rldwcfk2R8', // usada só na importação do histórico antigo
 
@@ -375,7 +377,7 @@ function enviarEmailMvt_(nomeMes, ano, dataLimiteStr, modoTeste, previa) {
  * HISTÓRICO DE VOTOS
  ************************************************************/
 function obterAbaHistorico_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = planilhaMVT_();
   let aba = ss.getSheetByName(CONFIG.ABA_HISTORICO);
   if (!aba) {
     aba = ss.insertSheet(CONFIG.ABA_HISTORICO);
@@ -533,7 +535,7 @@ function importarHistoricoLegado_() {
  ************************************************************/
 function lerTime_() {
   const time = { emails: [], nomePorEmail: {} };
-  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.ABA_TIME);
+  const aba = planilhaMVT_().getSheetByName(CONFIG.ABA_TIME);
   if (!aba || aba.getLastRow() < 2) return time;
   const colunas = Math.min(2, aba.getLastColumn());
   aba.getRange(2, 1, aba.getLastRow() - 1, colunas).getValues().forEach(l => {
@@ -1019,7 +1021,7 @@ function textoResposta_(valor) {
 
 function registrarLog_(acao, status, detalhe) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = planilhaMVT_();
     let aba = ss.getSheetByName(CONFIG.ABA_LOG);
     if (!aba) aba = ss.insertSheet(CONFIG.ABA_LOG);
     aba.appendRow([new Date(), acao, status, String(detalhe || '').substring(0, 1000)]);

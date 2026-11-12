@@ -29,3 +29,8 @@ assert.strictEqual(venc.to,'yasmim.castro@totvs.com.br'); assert.strictEqual(ven
 assert.ok(ctx.enviados.filter(e=>/lembrado/.test(e.subject)).every(e=>!e.cc));
 assert.strictEqual(ctx.centralCarregar().trimestres[1].oficial.vencedor,'Yasmim Lira');
 console.log('  ✓ envio oficial e registro na aba Ganhadores');
+// Pelo link do Web App não existe planilha ativa: tudo deve funcionar pelo ID
+ctx.semPlanilhaAtiva=true;
+assert.strictEqual(ctx.centralCarregar().refAtual,'2026-10');
+ctx.semPlanilhaAtiva=false;
+console.log('  ✓ Central funciona pelo link (sem planilha ativa)');

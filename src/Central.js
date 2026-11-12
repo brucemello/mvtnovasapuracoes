@@ -12,6 +12,20 @@ function abrirCentralMVT() {
   SpreadsheetApp.getUi().showModalDialog(html, 'Central MVT · Squad Tributos');
 }
 
+// Abre a Central pelo link do Web App (implantação). O acesso é só de quem implantou.
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('CentralHTML')
+    .setTitle('Central MVT · Squad Tributos')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+// Planilha do MVT: a ativa quando aberto pela planilha; pelo ID quando aberto pelo link
+function planilhaMVT_() {
+  let ss = null;
+  try { ss = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) {}
+  return ss || SpreadsheetApp.openById(CONFIG.PLANILHA_MVT_ID);
+}
+
 /************************************************************
  * LEITURA (uma chamada carrega tudo)
  ************************************************************/
@@ -120,7 +134,7 @@ function proximaDataDiaUtil_(aPartirDe, n, soTrimestral) {
 }
 
 function lerLogsEnvios_() {
-  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.ABA_LOG);
+  const aba = planilhaMVT_().getSheetByName(CONFIG.ABA_LOG);
   if (!aba || aba.getLastRow() < 1) return [];
   const tipos = {
     MVT_MENSAL: 'Formulário mensal', MVT_COBRANCA: 'Cobrança', MVT_APURACAO: 'Apuração',
@@ -146,7 +160,7 @@ function lerLogsEnvios_() {
  * GANHADORES OFICIAIS
  ************************************************************/
 function obterAbaGanhadores_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = planilhaMVT_();
   let aba = ss.getSheetByName(ABA_GANHADORES);
   if (!aba) {
     aba = ss.insertSheet(ABA_GANHADORES);
@@ -158,7 +172,7 @@ function obterAbaGanhadores_() {
 }
 
 function lerGanhadores_() {
-  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ABA_GANHADORES);
+  const aba = planilhaMVT_().getSheetByName(ABA_GANHADORES);
   const mapa = {};
   if (!aba || aba.getLastRow() < 2) return mapa;
   aba.getRange(2, 1, aba.getLastRow() - 1, CABECALHO_GANHADORES.length).getValues().forEach(l => {
