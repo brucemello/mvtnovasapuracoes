@@ -1,5 +1,6 @@
 // Testa as regras de calendário do MVT (dias úteis, feriados, trimestre e prazo)
 // carregando os arquivos de src/ com stubs mínimos dos serviços do Google.
+// Executado a cada deploy; uma falha aqui impede o clasp push.
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
