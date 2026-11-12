@@ -54,6 +54,7 @@ const CONFIG = {
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const CABECALHO_HISTORICO = ['Referência', 'Data do voto', 'E-mail', 'Votado', 'Justificativa', 'ID resposta'];
 const PROP_REF_ATUAL = 'MVT_REF_ATUAL';
+const PROP_REF_INICIO = 'MVT_REF_INICIO'; // quando a rodada atual foi aberta (ISO)
 
 /************************************************************
  * MENU
@@ -280,6 +281,7 @@ function processarVotacaoMVT(dadosForm) {
     const novaRodada = novaRef !== refAnterior;
     atualizarSecaoFormulario_(tituloSprint, entregas.texto, novaRodada);
     PropertiesService.getScriptProperties().setProperty(PROP_REF_ATUAL, novaRef);
+    if (novaRodada) PropertiesService.getScriptProperties().setProperty(PROP_REF_INICIO, new Date().toISOString());
 
     enviarEmailMvt_(nomeMes, ano, dataLimiteStr, false, '');
 
@@ -408,10 +410,16 @@ function arquivarRespostasAtuais_() {
   const resultado = { novas: 0, atualizadas: 0 };
   if (respostas.length === 0) return resultado;
 
+  // Quem edita uma resposta antiga pelo link "Editar resposta" mantém o mesmo ID no Forms.
+  // Por isso a edição de respostas fica desligada e, mais abaixo, um ID só atualiza a linha
+  // da MESMA rodada: votos de rodadas anteriores nunca são sobrescritos.
+  try { if (form.canEditResponse()) form.setAllowResponseEdits(false); } catch (e) {}
+
   const ref = refAtual_();
+  const inicio = inicioRodada_(ref);
   const aba = obterAbaHistorico_();
   const existentes = {};
-  lerHistorico_().forEach(h => { if (h.id) existentes[h.id] = h; });
+  lerHistorico_().forEach(h => { if (h.id) existentes[h.ref + '|' + h.id] = h; });
 
   const novas = [];
   respostas.forEach(resp => {
@@ -419,9 +427,11 @@ function arquivarRespostasAtuais_() {
     if (!voto.votado) return;
     const id = resp.getId();
     const email = String(resp.getRespondentEmail() || '').toLowerCase().trim();
-    const antigo = existentes[id];
+    const antigo = existentes[ref + '|' + id];
+    // Resposta anterior à abertura da rodada: pertence à rodada passada e já está no Histórico
+    if (!antigo && resp.getTimestamp() < inicio) return;
     if (antigo) {
-      // resposta editada pelo votante: atualiza a linha existente
+      // resposta editada pelo votante dentro da mesma rodada: atualiza a linha existente
       if (antigo.votado !== voto.votado || antigo.justificativa !== voto.justificativa) {
         aba.getRange(antigo.linha, 2, 1, 4).setValues([[resp.getTimestamp(), email, voto.votado, voto.justificativa]]);
         resultado.atualizadas++;
@@ -916,6 +926,17 @@ function refMesAnterior_(data) {
 // Referência da rodada que está aberta no formulário
 function refAtual_() {
   return PropertiesService.getScriptProperties().getProperty(PROP_REF_ATUAL) || refMesAnterior_(new Date());
+}
+
+// Início da rodada atual: gravado no envio oficial; sem registro, 1º dia do mês seguinte à sprint
+function inicioRodada_(ref) {
+  const salvo = PropertiesService.getScriptProperties().getProperty(PROP_REF_INICIO);
+  const ano = parseInt(ref.substring(0, 4), 10), mes = parseInt(ref.substring(5, 7), 10);
+  const padrao = new Date(ano, mes, 1);
+  if (!salvo) return padrao;
+  const d = new Date(salvo);
+  // O registro só vale se for da rodada atual (posterior ao fim da sprint)
+  return isNaN(d.getTime()) || d < padrao ? padrao : d;
 }
 
 function refDeCelula_(valor) {

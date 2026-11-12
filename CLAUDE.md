@@ -6,4 +6,6 @@
 - Envios para a squad (squad.tributos@totvs.com.br) e para os indicados são reais. Qualquer mudança deve manter os modos de teste mandando só para o gestor.
 - Regras de negócio: formulário no 1º dia útil, cobrança no 3º, apuração no 5º dia útil de jan/abr/jul/out; votos gravados na aba `Historico` por referência (yyyy-MM) antes de zerar o Forms; reconhecimento é manual, vencedor com squad em cópia, indicados em particular, gestor em cópia oculta.
 - Central MVT: `src/Central.js` (servidor, uma chamada `centralCarregar`) + `src/CentralHTML.html`. Retornos para `google.script.run` não podem ter objetos Date: converta para texto. Monte o HTML com `textContent` (justificativas vêm dos usuários).
-- Rode `node tests/datas.test.js` e `node tests/central.test.js` antes de commitar (o deploy também roda).
+- Histórico: um ID de resposta do Forms só atualiza a linha da MESMA rodada (chave ref+ID). Respostas anteriores ao início da rodada (`MVT_REF_INICIO`) são ignoradas e a edição de respostas no Forms fica desligada. Nunca volte a indexar só por ID: votantes editam respostas antigas e isso já apagou votos de setembro/2026.
+- Resultado divulgado é imutável na Central: vem da aba `Ganhadores` ou, para trimestres antigos, do log de fechamento oficial.
+- Rode `for t in tests/*.test.js; do node $t; done` antes de commitar (o deploy também roda). `tests/mock.js` é o ambiente simulado compartilhado.

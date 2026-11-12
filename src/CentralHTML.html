@@ -506,6 +506,10 @@ function renderTrimestre() {
   else if (t.empate) { nomeV = 'Empate: ' + t.lideres.join(' e '); info = t.ranking[0].votos + ' votos cada · o desempate é escolhido no envio oficial'; }
   else { nomeV = t.ranking[0].nome; info = (t.status === 'andamento' ? 'Liderando com ' : 'Vencedor com ') + t.ranking[0].votos + ' votos'; }
   c.appendChild(el('div', { class: 'vencedor' }, [el('div', { class: 'trofeu', text: t.status === 'andamento' ? '⏳' : '🏆' }), el('div', null, [el('div', { class: 'nome', text: nomeV }), el('div', { class: 'info', text: info })])]));
+  if (t.oficial && (norm(t.ranking[0].nome) !== norm(t.oficial.vencedor) || t.ranking[0].votos !== t.oficial.votos)) {
+    c.appendChild(el('div', { class: 'aviso', text: '⚠️ O resultado oficial foi ' + t.oficial.vencedor + ' com ' + t.oficial.votos + ' votos' + (t.oficial.fonte ? ' (' + t.oficial.fonte + ')' : '') +
+      '. O ranking abaixo é recalculado com o Histórico atual, que mudou depois da divulgação. Confira a aba Historico.' }));
+  }
 
   var g = el('div', { class: 'grade g4', style: 'margin-bottom:14px' });
   g.appendChild(kpi('Votos válidos', String(t.validos), 'Descartados: ' + t.duplicados + ' duplicado(s), ' + t.autovotos + ' autovoto(s)'));

@@ -35,6 +35,8 @@ function centralCarregar() {
   const chaveAndamento = trimestreDaRef_(refAtual).chave;
   const oficiais = lerGanhadores_();
   const props = PropertiesService.getScriptProperties();
+  const envios = lerLogsEnvios_();
+  const apuracoesOficiais = vencedoresDosLogs_(envios);
 
   const trimestres = Object.keys(chaves).sort().reverse().map(chave => {
     const tri = chaves[chave];
@@ -46,6 +48,11 @@ function centralCarregar() {
       oficial: oficiais[chave] || null,
       reconhecimentoEnviadoEm: props.getProperty('MVT_RECONHECIMENTO_' + tri.refs[2]) || ''
     };
+    // Trimestre divulgado antes da aba Ganhadores existir: usa o vencedor do fechamento oficial (Logs)
+    if (!item.oficial && item.reconhecimentoEnviadoEm && apuracoesOficiais[tri.rotulo]) {
+      const a = apuracoesOficiais[tri.rotulo];
+      item.oficial = { vencedor: a.vencedor, votos: a.votos, empate: false, enviadoEm: item.reconhecimentoEnviadoEm, fonte: 'Fechamento oficial de ' + a.data };
+    }
     try {
       const ap = apurarPeriodo_(tri, historico, time);
       item.ranking = ap.ranking.map(p => ({ nome: p.nome, votos: p.votos, depoimentos: p.depoimentos }));
@@ -79,13 +86,24 @@ function centralCarregar() {
       email: v.email, votado: v.votado, justificativa: v.justificativa
     })),
     trimestres: trimestres,
-    envios: lerLogsEnvios_(),
+    envios: envios,
     proximas: {
       envio: proximaDataDiaUtil_(hoje, CONFIG.DIA_UTIL_ENVIO, false),
       cobranca: proximaDataDiaUtil_(hoje, CONFIG.DIA_UTIL_COBRANCA, false),
       apuracao: proximaDataDiaUtil_(hoje, CONFIG.DIA_UTIL_APURACAO, true)
     }
   };
+}
+
+// "Julho, Agosto e Setembro de 2026: Vencedor: Yasmim Lira com 4 votos..." -> { rótulo: vencedor }
+function vencedoresDosLogs_(envios) {
+  const mapa = {};
+  envios.slice().reverse().forEach(e => {
+    if (e.tipo !== 'Apuração' || e.modo !== 'Oficial') return;
+    const m = /^(.+?): Vencedor: (.+?) com (\d+) votos/.exec(e.detalhe);
+    if (m) mapa[m[1]] = { vencedor: m[2], votos: parseInt(m[3], 10), data: e.data.split(' ')[0] };
+  });
+  return mapa;
 }
 
 function ehData_(v) {
