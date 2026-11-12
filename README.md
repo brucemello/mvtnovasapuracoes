@@ -4,6 +4,18 @@ Código do Google Apps Script vinculado à planilha **Versão 2 MVT - Entregas M
 
 O script gera o formulário mensal com as entregas do Jira, cobra quem não votou, grava os votos na aba `Historico`, apura o MVT a cada trimestre e envia os e-mails de reconhecimento.
 
+## Central MVT
+
+Menu **MVT Jira > 📊 Abrir Central MVT**. Uma janela com:
+
+- **Visão geral:** rodada aberta, participação, próximos disparos automáticos, último MVT e atividade recente.
+- **Respostas por mês:** votos filtrados por sprint, por pessoa votada ou por texto.
+- **Quem respondeu:** responderam e pendentes de cada mês, com cobrança da rodada aberta.
+- **Apurações:** ranking, votos por sprint e justificativas de qualquer trimestre, e os e-mails de reconhecimento (o oficial só libera com o trimestre fechado).
+- **Ganhadores:** vencedor de cada trimestre; os oficiais ficam na aba `Ganhadores`.
+- **Histórico de envios:** tudo o que foi disparado (aba `Logs`), com filtros.
+- **Novos envios:** formulário mensal, cobrança, fechamento e gravação do Histórico.
+
 ## Como funciona
 
 | Workflow | Quando roda | O que faz |

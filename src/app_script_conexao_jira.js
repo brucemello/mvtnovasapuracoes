@@ -61,6 +61,7 @@ const PROP_REF_ATUAL = 'MVT_REF_ATUAL';
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('MVT Jira')
+    .addItem('📊 Abrir Central MVT', 'abrirCentralMVT')
     .addItem('🎛️ Abrir Painel de Controle', 'abrirPainelMVT')
     .addItem('📖 Abrir Manual de Uso', 'abrirManualMVT')
     .addSeparator()
@@ -600,21 +601,34 @@ function trimestreFechado_(hoje) {
   let ano = hoje.getFullYear();
   let tri = Math.floor(hoje.getMonth() / 3) - 1;
   if (tri < 0) { tri = 3; ano--; }
+  return trimestrePorIndice_(ano, tri);
+}
+
+// tri = 0 (jan-mar) a 3 (out-dez)
+function trimestrePorIndice_(ano, tri) {
   const indices = [tri * 3, tri * 3 + 1, tri * 3 + 2];
   return {
+    chave: ano + '-T' + (tri + 1),
     refs: indices.map(m => ano + '-' + ('0' + (m + 1)).slice(-2)),
     rotulo: `${MESES[indices[0]]}, ${MESES[indices[1]]} e ${MESES[indices[2]]} de ${ano}`
   };
+}
+
+// Trimestre ao qual uma referência yyyy-MM pertence
+function trimestreDaRef_(ref) {
+  return trimestrePorIndice_(parseInt(ref.substring(0, 4), 10), Math.floor((parseInt(ref.substring(5, 7), 10) - 1) / 3));
 }
 
 // Calcula o resultado do último trimestre fechado. Usada pelo fechamento e pelos e-mails de reconhecimento.
 function apurarTrimestre_(hoje) {
   // Garante que a rodada em andamento também esteja no Histórico (não apaga nada)
   arquivarRespostasAtuais_();
+  return apurarPeriodo_(trimestreFechado_(hoje), lerHistorico_(), lerTime_());
+}
 
-  const tri = trimestreFechado_(hoje);
-  const time = lerTime_();
-  const votosPeriodo = lerHistorico_()
+// Cálculo puro de um trimestre qualquer (usado também pela Central MVT)
+function apurarPeriodo_(tri, historico, time) {
+  const votosPeriodo = historico
     .filter(v => tri.refs.indexOf(v.ref) !== -1 && v.votado)
     .sort((a, b) => a.data.getTime() - b.data.getTime());
 
@@ -753,7 +767,10 @@ function enviarReconhecimentosOficial() {
     if (!confirmar_(aviso + '\nEnviar os e-mails agora para as pessoas?')) return;
 
     const resultado = enviarReconhecimentos_(ap, [normalizar_(vencedor.nome)], false);
-    if (resultado.sucesso) props.setProperty(chaveEnvio, formatarData_(hoje, 'dd/MM/yyyy HH:mm'));
+    if (resultado.sucesso) {
+      props.setProperty(chaveEnvio, formatarData_(hoje, 'dd/MM/yyyy HH:mm'));
+      registrarGanhador_(ap.tri, vencedor, ap.empate);
+    }
     mostrarResultado_(resultado);
   } catch (e) {
     registrarLog_('MVT_RECONHECIMENTO', 'ERRO', e.message);

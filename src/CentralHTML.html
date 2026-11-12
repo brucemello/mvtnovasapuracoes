@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root {
+    --azul: #1f4e78; --azul-escuro: #163a5a; --azul-claro: #e8f0f8;
+    --ouro: #f5b301; --ouro-claro: #fff6d6;
+    --verde: #2a9d8f; --verde-claro: #e3f4f1;
+    --vermelho: #c0392b; --vermelho-claro: #fbe9e7;
+    --texto: #1f2933; --suave: #64748b; --linha: #e2e8f0; --fundo: #f4f6f9; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', Roboto, Arial, sans-serif; color: var(--texto); background: var(--fundo); font-size: 13px; }
+  .app { display: grid; grid-template-columns: 200px 1fr; height: 100vh; }
+
+  nav { background: var(--azul-escuro); color: #dbe6f1; padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; }
+  nav .marca { font-size: 16px; font-weight: 700; color: #fff; padding: 0 10px 4px; }
+  nav .sub { font-size: 11px; color: #9fb6cc; padding: 0 10px 18px; }
+  nav button { all: unset; cursor: pointer; padding: 9px 12px; border-radius: 6px; font-size: 13px; display: flex; gap: 9px; align-items: center; }
+  nav button:hover { background: rgba(255,255,255,.08); }
+  nav button.ativo { background: #fff; color: var(--azul-escuro); font-weight: 600; }
+  nav .rodape { margin-top: auto; font-size: 11px; color: #9fb6cc; padding: 0 10px; line-height: 1.5; }
+  nav .rodape a { color: #fff; }
+
+  main { overflow-y: auto; padding: 22px 26px 40px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .desc { color: var(--suave); margin: 0 0 18px; }
+  h2 { font-size: 14px; margin: 0 0 12px; }
+
+  .grade { display: grid; gap: 14px; }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .card { background: var(--card); border: 1px solid var(--linha); border-radius: 10px; padding: 16px; }
+  .kpi .rot { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--suave); }
+  .kpi .val { font-size: 22px; font-weight: 700; margin-top: 6px; }
+  .kpi .det { color: var(--suave); margin-top: 4px; font-size: 12px; }
+  .kpi.destaque { background: linear-gradient(135deg, var(--azul), var(--azul-escuro)); color: #fff; border: none; }
+  .kpi.destaque .rot, .kpi.destaque .det { color: #c9d8e6; }
+
+  .filtros { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
+  .filtros label, .campo label { display: block; font-size: 11px; font-weight: 600; color: var(--suave); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .4px; }
+  select, input[type=text], input[type=date] { font: inherit; padding: 7px 9px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; min-width: 150px; }
+  input[type=text].busca { min-width: 260px; }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--suave); padding: 9px 10px; border-bottom: 2px solid var(--linha); position: sticky; top: 0; background: #fff; }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+  tr:hover td { background: #fafcff; }
+  .tabela { border: 1px solid var(--linha); border-radius: 10px; overflow: hidden; }
+  .vazio { padding: 28px; text-align: center; color: var(--suave); }
+  .muted { color: var(--suave); }
+  .peq { font-size: 11px; }
+
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .t-oficial { background: var(--azul-claro); color: var(--azul); }
+  .t-teste { background: #eef2f7; color: #475569; }
+  .t-erro { background: var(--vermelho-claro); color: var(--vermelho); }
+  .t-aviso { background: var(--ouro-claro); color: #8a6100; }
+  .t-ok { background: var(--verde-claro); color: #1d7268; }
+  .t-ouro { background: var(--ouro-claro); color: #8a6100; }
+
+  .barra { height: 8px; background: #edf1f6; border-radius: 6px; overflow: hidden; }
+  .barra > i { display: block; height: 100%; background: var(--azul); border-radius: 6px; }
+  .ranking .linha { display: grid; grid-template-columns: 26px 220px 1fr 46px; gap: 10px; align-items: center; padding: 7px 0; }
+  .ranking .pos { font-weight: 700; color: var(--suave); text-align: center; }
+  .ranking .lider .barra > i { background: var(--ouro); }
+  .ranking .lider .nome { font-weight: 700; }
+  .ranking .num { text-align: right; font-weight: 600; }
+
+  .colunas-mes { display: flex; align-items: end; gap: 10px; height: 150px; padding-top: 8px; }
+  .colunas-mes .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end; }
+  .colunas-mes .col .b { width: 100%; max-width: 46px; background: var(--azul); border-radius: 5px 5px 0 0; min-height: 3px; }
+  .colunas-mes .col.atual .b { background: var(--ouro); }
+  .colunas-mes .col span { font-size: 11px; color: var(--suave); }
+  .colunas-mes .col b { font-size: 11px; }
+
+  .vencedor { display: flex; gap: 16px; align-items: center; padding: 18px; border-radius: 10px; background: linear-gradient(135deg, var(--azul), var(--azul-escuro)); color: #fff; margin-bottom: 14px; }
+  .vencedor .trofeu { font-size: 42px; }
+  .vencedor .nome { font-size: 22px; font-weight: 700; }
+  .vencedor .info { color: #c9d8e6; margin-top: 3px; }
+
+  .hall { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .hall .card { border-top: 4px solid var(--ouro); }
+  .hall .card.aberto { border-top-color: #cbd5e1; }
+  .hall .periodo { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--suave); }
+  .hall .quem { font-size: 18px; font-weight: 700; margin: 8px 0 4px; }
+
+  details { border: 1px solid var(--linha); border-radius: 8px; margin-bottom: 8px; background: #fff; }
+  summary { cursor: pointer; padding: 10px 12px; font-weight: 600; display: flex; justify-content: space-between; }
+  .depo { margin: 0 12px 10px; padding: 10px 12px; background: var(--ouro-claro); border-left: 4px solid var(--ouro); border-radius: 6px; line-height: 1.5; }
+  .depo.verde { background: var(--verde-claro); border-left-color: var(--verde); }
+
+  .pessoas li { list-style: none; padding: 8px 0; border-bottom: 1px solid var(--linha); display: flex; justify-content: space-between; gap: 10px; }
+  .pessoas { padding: 0; margin: 0; }
+
+  .btn { font: inherit; font-weight: 600; border: 1px solid transparent; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+  .btn:disabled { opacity: .55; cursor: wait; }
+  .btn-pri { background: var(--azul); color: #fff; }
+  .btn-pri:hover { background: var(--azul-escuro); }
+  .btn-sec { background: #fff; color: var(--azul); border-color: #b9cbe0; }
+  .btn-sec:hover { background: var(--azul-claro); }
+  .btn-ouro { background: var(--ouro); color: #3d2b00; }
+  .acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+  .aviso { padding: 10px 12px; border-radius: 8px; background: var(--ouro-claro); color: #6b4c00; margin-bottom: 14px; }
+  .chk { display: flex; gap: 14px; flex-wrap: wrap; }
+  .chk label { display: flex; gap: 6px; align-items: center; text-transform: none; font-size: 13px; color: var(--texto); font-weight: 400; letter-spacing: 0; }
+  .campo { margin-bottom: 12px; }
+  .campo input { width: 100%; }
+  .modo { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px dashed #93b4d6; background: var(--azul-claro); border-radius: 8px; margin: 6px 0 4px; }
+
+  #carregando { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(244,246,249,.85); font-size: 14px; color: var(--azul); z-index: 20; }
+  #toast { position: fixed; right: 20px; bottom: 20px; max-width: 460px; padding: 12px 16px; border-radius: 8px; color: #fff; display: none; white-space: pre-wrap; z-index: 30; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+  #toast.ok { background: #1d7268; } #toast.erro { background: var(--vermelho); }
+  .modal-fundo { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; z-index: 25; }
+  .modal { background: #fff; border-radius: 12px; padding: 20px; width: 480px; max-width: 92vw; }
+  .modal h3 { margin: 0 0 10px; }
+  .modal p { white-space: pre-wrap; line-height: 1.5; margin: 0 0 12px; }
+  .oculto { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav id="menu">
+    <div class="marca">🏆 Central MVT</div>
+    <div class="sub">Squad Tributos</div>
+    <button data-v="geral" class="ativo">📊 Visão geral</button>
+    <button data-v="respostas">💬 Respostas por mês</button>
+    <button data-v="participacao">✅ Quem respondeu</button>
+    <button data-v="trimestres">🗳️ Apurações</button>
+    <button data-v="ganhadores">🏅 Ganhadores</button>
+    <button data-v="envios">📨 Histórico de envios</button>
+    <button data-v="novo">🚀 Novos envios</button>
+    <div class="rodape">
+      <div id="atualizado"></div>
+      <a href="#" id="recarregar">↻ Atualizar dados</a><br>
+      <a href="#" id="linkForm" target="_blank">Abrir formulário ↗</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- VISÃO GERAL -->
+    <section id="v-geral">
+      <h1>Visão geral</h1>
+      <p class="desc">Situação da rodada aberta, próximos disparos automáticos e participação por mês.</p>
+      <div id="avisoGeral"></div>
+      <div class="grade g4" id="kpis"></div>
+      <div class="grade g2" style="margin-top:14px">
+        <div class="card"><h2>Participação por mês</h2><div class="colunas-mes" id="graficoMeses"></div></div>
+        <div class="card"><h2>Atividade recente</h2><div id="recentes"></div></div>
+      </div>
+    </section>
+
+    <!-- RESPOSTAS -->
+    <section id="v-respostas" class="oculto">
+      <h1>Respostas por mês</h1>
+      <p class="desc">Todos os votos gravados no Histórico. O mês é o da sprint votada.</p>
+      <div class="filtros">
+        <div><label>Mês (sprint)</label><select id="fMesResp"></select></div>
+        <div><label>Votado</label><select id="fVotadoResp"></select></div>
+        <div><label>Buscar</label><input type="text" class="busca" id="fBuscaResp" placeholder="Nome, e-mail ou trecho da justificativa"></div>
+        <div class="muted" id="contResp" style="padding-bottom:8px"></div>
+      </div>
+      <div class="tabela"><table><thead><tr><th style="width:120px">Data</th><th style="width:220px">Quem votou</th><th style="width:190px">Votou em</th><th>Justificativa</th></tr></thead><tbody id="tbResp"></tbody></table></div>
+    </section>
+
+    <!-- PARTICIPAÇÃO -->
+    <section id="v-participacao" class="oculto">
+      <h1>Quem respondeu</h1>
+      <p class="desc">Compara os votos do mês com a lista atual da aba TIME.</p>
+      <div class="filtros"><div><label>Mês (sprint)</label><select id="fMesPart"></select></div></div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b id="partTitulo"></b><span id="partPct" class="muted"></span></div>
+        <div class="barra" style="height:12px"><i id="partBarra"></i></div>
+        <div id="partAcoes" class="acoes"></div>
+      </div>
+      <div class="grade g2">
+        <div class="card"><h2 id="tituloResp">Responderam</h2><ul class="pessoas" id="listaResp"></ul></div>
+        <div class="card"><h2 id="tituloPend">Não responderam</h2><ul class="pessoas" id="listaPend"></ul></div>
+      </div>
+      <div class="card oculto" id="cardFora" style="margin-top:14px"><h2>Votos de e-mails fora da aba TIME</h2><ul class="pessoas" id="listaFora"></ul></div>
+    </section>
+
+    <!-- APURAÇÕES -->
+    <section id="v-trimestres" class="oculto">
+      <h1>Apurações por trimestre</h1>
+      <p class="desc">Ranking calculado com as regras oficiais: 1 voto por pessoa por sprint (vale o mais recente) e sem autovoto.</p>
+      <div class="filtros"><div><label>Trimestre</label><select id="fTri"></select></div><div id="triStatus" style="padding-bottom:8px"></div></div>
+      <div id="triConteudo"></div>
+    </section>
+
+    <!-- GANHADORES -->
+    <section id="v-ganhadores" class="oculto">
+      <h1>Ganhadores</h1>
+      <p class="desc">Vencedores de cada trimestre. "Oficial" indica que os e-mails de reconhecimento já foram enviados.</p>
+      <div class="hall" id="hall"></div>
+    </section>
+
+    <!-- ENVIOS -->
+    <section id="v-envios" class="oculto">
+      <h1>Histórico de envios</h1>
+      <p class="desc">Registro de tudo que o MVT disparou, automático ou manual (aba Logs).</p>
+      <div class="filtros">
+        <div><label>Tipo</label><select id="fTipoEnv"></select></div>
+        <div><label>Modo</label><select id="fModoEnv"><option value="">Todos</option><option>Oficial</option><option>Teste</option><option>Erro</option><option>Aviso</option></select></div>
+        <div><label>Mês do envio</label><select id="fMesEnv"></select></div>
+        <div class="muted" id="contEnv" style="padding-bottom:8px"></div>
+      </div>
+      <div class="tabela"><table><thead><tr><th style="width:130px">Data</th><th style="width:150px">Tipo</th><th style="width:80px">Modo</th><th>Detalhe</th></tr></thead><tbody id="tbEnv"></tbody></table></div>
+    </section>
+
+    <!-- NOVOS ENVIOS -->
+    <section id="v-novo" class="oculto">
+      <h1>Novos envios</h1>
+      <p class="desc">Disparos manuais. Os testes enviam só para <span class="emailGestor"></span> e não alteram o formulário.</p>
+      <div class="grade g2">
+        <div class="card">
+          <h2>📤 Formulário mensal</h2>
+          <div class="campo"><label>Título da seção no Forms</label><input type="text" id="nTitulo"></div>
+          <div class="campo"><label>Projetos</label><div class="chk" id="nProjetos"></div></div>
+          <div class="grade g2" style="gap:10px">
+            <div class="campo"><label>Entregas de</label><input type="date" id="nInicio"></div>
+            <div class="campo"><label>até</label><input type="date" id="nFim"></div>
+          </div>
+          <div class="campo"><label>Simular data de envio (opcional)</label><input type="date" id="nSimulada"></div>
+          <div class="modo"><b>🧪 Modo teste</b><input type="checkbox" id="nTeste" checked style="transform:scale(1.3)"></div>
+          <div class="peq muted" id="nModoDesc"></div>
+          <div class="acoes"><button class="btn btn-pri" id="btnFormulario">Executar</button></div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <h2>🔔 Cobrança de quem não votou</h2>
+            <div class="muted" id="nCobrancaInfo"></div>
+            <div class="acoes"><button class="btn btn-sec" data-acao="cobrancaTeste">Testar (só para mim)</button><button class="btn btn-pri" data-acao="cobranca">Cobrar pendentes</button></div>
+          </div>
+          <div class="card" style="margin-bottom:14px">
+            <h2>🏆 Fechamento trimestral</h2>
+            <div class="muted" id="nApuracaoInfo"></div>
+            <div class="acoes"><button class="btn btn-sec" data-acao="apuracaoTeste">Testar</button><button class="btn btn-pri" data-acao="apuracao">Executar oficial</button></div>
+          </div>
+          <div class="card">
+            <h2>💾 Histórico</h2>
+            <div class="muted">Copia as respostas atuais do formulário para a aba Historico. Não apaga nada.</div>
+            <div class="acoes"><button class="btn btn-sec" data-acao="historico">Gravar respostas agora</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="carregando">Carregando dados do MVT…</div>
+<div id="toast"></div>
+<div class="modal-fundo" id="modalFundo">
+  <div class="modal">
+    <h3 id="mTitulo"></h3>
+    <p id="mTexto"></p>
+    <div id="mExtra"></div>
+    <div class="acoes" style="justify-content:flex-end"><button class="btn btn-sec" id="mNao">Cancelar</button><button class="btn btn-pri" id="mSim">Confirmar</button></div>
+  </div>
+</div>
+
+<script>
+var D = null;
+var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var CURTOS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+/* ---------- utilitários ---------- */
+function $(id) { return document.getElementById(id); }
+function el(tag, attrs, filhos) {
+  var e = document.createElement(tag);
+  if (attrs) Object.keys(attrs).forEach(function (k) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'text') e.textContent = attrs[k];
+    else if (k === 'style') e.setAttribute('style', attrs[k]);
+    else if (k.indexOf('on') === 0) e.addEventListener(k.substring(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  });
+  (filhos || []).forEach(function (f) { if (f !== null && f !== undefined) e.appendChild(typeof f === 'string' ? document.createTextNode(f) : f); });
+  return e;
+}
+function limpar(n) { while (n.firstChild) n.removeChild(n.firstChild); return n; }
+function norm(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function refLonga(r) { var p = String(r).split('-'); return p.length === 2 ? MESES[+p[1] - 1] + ' ' + p[0] : r; }
+function refCurta(r) { var p = String(r).split('-'); return p.length === 2 ? CURTOS[+p[1] - 1] + '/' + p[0].slice(2) : r; }
+function nomeDe(email) { for (var i = 0; i < D.time.length; i++) if (D.time[i].email === email) return D.time[i].nome; return ''; }
+function opcoes(sel, lista, valorAtual) {
+  limpar(sel);
+  lista.forEach(function (o) { var op = el('option', { value: o.v, text: o.t }); if (o.v === valorAtual) op.selected = true; sel.appendChild(op); });
+}
+function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function tagModo(m) { return el('span', { class: 'tag ' + ({ Oficial: 't-oficial', Teste: 't-teste', Erro: 't-erro', Aviso: 't-aviso' }[m] || 't-teste'), text: m }); }
+
+function toast(ok, msg) {
+  var t = $('toast'); t.className = ok ? 'ok' : 'erro'; t.textContent = (ok ? '✅ ' : '❌ ') + msg; t.style.display = 'block';
+  clearTimeout(toast.h); toast.h = setTimeout(function () { t.style.display = 'none'; }, ok ? 7000 : 12000);
+}
+function confirmar(titulo, texto, extra, aoConfirmar, rotuloSim) {
+  $('mTitulo').textContent = titulo; $('mTexto').textContent = texto;
+  limpar($('mExtra')); if (extra) $('mExtra').appendChild(extra);
+  $('mSim').textContent = rotuloSim || 'Confirmar';
+  $('modalFundo').style.display = 'flex';
+  $('mSim').onclick = function () { $('modalFundo').style.display = 'none'; aoConfirmar(); };
+  $('mNao').onclick = function () { $('modalFundo').style.display = 'none'; };
+}
+function chamar(funcao, arg, botao, depois) {
+  if (botao) botao.disabled = true;
+  google.script.run
+    .withSuccessHandler(function (r) {
+      if (botao) botao.disabled = false;
+      if (depois && depois(r) === false) return;
+      toast(!!(r && r.sucesso), r ? r.msg : 'Sem retorno do servidor.');
+      if (r && r.sucesso) carregar(true);
+    })
+    .withFailureHandler(function (e) { if (botao) botao.disabled = false; toast(false, e.message); })[funcao](arg);
+}
+
+/* ---------- navegação ---------- */
+document.querySelectorAll('#menu button').forEach(function (b) {
+  b.addEventListener('click', function () { mostrar(b.getAttribute('data-v')); });
+});
+function mostrar(v) {
+  document.querySelectorAll('#menu button').forEach(function (b) { b.classList.toggle('ativo', b.getAttribute('data-v') === v); });
+  document.querySelectorAll('main > section').forEach(function (s) { s.classList.toggle('oculto', s.id !== 'v-' + v); });
+}
+$('recarregar').addEventListener('click', function (e) { e.preventDefault(); carregar(); });
+
+/* ---------- carga ---------- */
+function carregar(silencioso) {
+  if (!silencioso) $('carregando').style.display = 'flex';
+  google.script.run
+    .withSuccessHandler(function (dados) { D = dados; $('carregando').style.display = 'none'; renderTudo(); })
+    .withFailureHandler(function (e) { $('carregando').textContent = '❌ Erro ao carregar: ' + e.message; })
+    .centralCarregar();
+}
+
+function refsComVotos() {
+  var m = {}; D.historico.forEach(function (v) { if (v.ref) m[v.ref] = true; });
+  m[D.refAtual] = true;
+  return Object.keys(m).sort().reverse();
+}
+function votosDoMes(ref) {
+  return D.historico.filter(function (v) { return v.ref === ref; }).sort(function (a, b) { return b.ordem - a.ordem; });
+}
+function participacao(ref) {
+  var votos = votosDoMes(ref), porEmail = {};
+  votos.forEach(function (v) { if (v.email && !porEmail[v.email]) porEmail[v.email] = v; });
+  var resp = [], pend = [], fora = [];
+  D.time.forEach(function (p) { if (porEmail[p.email]) resp.push({ p: p, v: porEmail[p.email] }); else pend.push(p); });
+  Object.keys(porEmail).forEach(function (e) { if (!D.time.some(function (p) { return p.email === e; })) fora.push(porEmail[e]); });
+  var semEmail = votos.filter(function (v) { return !v.email; }).length;
+  return { resp: resp, pend: pend, fora: fora, semEmail: semEmail, total: votos.length };
+}
+
+function renderTudo() {
+  $('atualizado').textContent = 'Atualizado em ' + D.geradoEm;
+  $('linkForm').href = D.formUrl || '#';
+  document.querySelectorAll('.emailGestor').forEach(function (s) { s.textContent = D.emailGestor; });
+  renderGeral(); prepararRespostas(); prepararParticipacao(); prepararTrimestres(); renderHall(); prepararEnvios(); prepararNovo();
+}
+
+/* ---------- visão geral ---------- */
+function ultimoVencedor() {
+  for (var i = 0; i < D.trimestres.length; i++) {
+    var t = D.trimestres[i];
+    if (t.status !== 'fechado') continue;
+    if (t.oficial) return { nome: t.oficial.vencedor, votos: t.oficial.votos, rotulo: t.rotulo, oficial: true };
+    if (t.ranking.length && !t.empate) return { nome: t.ranking[0].nome, votos: t.ranking[0].votos, rotulo: t.rotulo, oficial: !!t.reconhecimentoEnviadoEm };
+    if (t.empate) return { nome: 'Empate', votos: t.ranking[0].votos, rotulo: t.rotulo, oficial: false };
+  }
+  return null;
+}
+function kpi(rot, val, det, destaque) {
+  return el('div', { class: 'card kpi' + (destaque ? ' destaque' : '') }, [el('div', { class: 'rot', text: rot }), el('div', { class: 'val', text: val }), el('div', { class: 'det', text: det || '' })]);
+}
+function renderGeral() {
+  var aviso = limpar($('avisoGeral'));
+  if (D.avisoArquivo) aviso.appendChild(el('div', { class: 'aviso', text: D.avisoArquivo }));
+  var p = participacao(D.refAtual), n = D.time.length, pct = n ? Math.round(p.resp.length / n * 100) : 0;
+  var uv = ultimoVencedor();
+  var k = limpar($('kpis'));
+  k.appendChild(kpi('Rodada aberta', 'Sprint ' + refLonga(D.refAtual), p.total + ' voto(s) recebido(s)', true));
+  k.appendChild(kpi('Participação da rodada', p.resp.length + ' de ' + n, pct + '% do time · ' + p.pend.length + ' pendente(s)'));
+  k.appendChild(kpi('Próximos disparos', D.proximas.envio || '—', 'Cobrança ' + (D.proximas.cobranca || '—') + ' · Apuração ' + (D.proximas.apuracao || '—')));
+  k.appendChild(kpi('Último MVT', uv ? uv.nome : '—', uv ? uv.rotulo + (uv.votos ? ' · ' + uv.votos + ' votos' : '') : 'Nenhum trimestre fechado'));
+
+  var g = limpar($('graficoMeses')), refs = refsComVotos().slice(0, 9).reverse();
+  refs.forEach(function (r) {
+    var pr = participacao(r), pc = n ? Math.round(pr.resp.length / n * 100) : 0;
+    g.appendChild(el('div', { class: 'col' + (r === D.refAtual ? ' atual' : ''), title: refLonga(r) + ': ' + pr.resp.length + ' de ' + n }, [
+      el('b', { text: pc + '%' }), el('div', { class: 'b', style: 'height:' + Math.max(pc, 2) + '%' }), el('span', { text: refCurta(r) })
+    ]));
+  });
+
+  var rc = limpar($('recentes'));
+  var lista = D.envios.filter(function (e) { return e.tipo !== 'Implantação'; }).slice(0, 6);
+  if (!lista.length) rc.appendChild(el('div', { class: 'vazio', text: 'Nenhum envio registrado ainda.' }));
+  lista.forEach(function (e) {
+    rc.appendChild(el('div', { style: 'display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--linha)' }, [
+      el('span', { class: 'muted peq', style: 'width:96px;flex:none', text: e.data }), el('b', { style: 'width:130px;flex:none', text: e.tipo }), tagModo(e.modo),
+      el('span', { class: 'muted peq', style: 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap', text: e.detalhe, title: e.detalhe })
+    ]));
+  });
+}
+
+/* ---------- respostas ---------- */
+function prepararRespostas() {
+  var sel = $('fMesResp'), atual = sel.value || D.refAtual;
+  opcoes(sel, [{ v: '*', t: 'Todos os meses' }].concat(refsComVotos().map(function (r) { return { v: r, t: refLonga(r) + (r === D.refAtual ? ' (aberta)' : '') }; })), atual);
+  sel.onchange = function () { $('fVotadoResp').value = ''; renderRespostas(); };
+  $('fVotadoResp').onchange = renderRespostas;
+  $('fBuscaResp').oninput = renderRespostas;
+  renderRespostas();
+}
+function renderRespostas() {
+  var ref = $('fMesResp').value, base = ref === '*' ? D.historico.slice().sort(function (a, b) { return b.ordem - a.ordem; }) : votosDoMes(ref);
+  var nomes = {}; base.forEach(function (v) { nomes[v.votado] = true; });
+  var selV = $('fVotadoResp'), vAtual = selV.value;
+  opcoes(selV, [{ v: '', t: 'Todos' }].concat(Object.keys(nomes).sort().map(function (n) { return { v: n, t: n }; })), vAtual);
+  var busca = norm($('fBuscaResp').value);
+  var linhas = base.filter(function (v) {
+    if (selV.value && v.votado !== selV.value) return false;
+    if (!busca) return true;
+    return norm([v.email, nomeDe(v.email), v.votado, v.justificativa].join(' ')).indexOf(busca) !== -1;
+  });
+  $('contResp').textContent = linhas.length + ' resposta(s)';
+  var tb = limpar($('tbResp'));
+  if (!linhas.length) tb.appendChild(el('tr', null, [el('td', { colspan: 4, class: 'vazio', text: 'Nenhuma resposta para este filtro.' })]));
+  linhas.forEach(function (v) {
+    var nome = nomeDe(v.email);
+    tb.appendChild(el('tr', null, [
+      el('td', null, [v.data, el('div', { class: 'muted peq', text: ref === '*' ? 'Sprint ' + refCurta(v.ref) : '' })]),
+      el('td', null, [nome || (v.email ? v.email : 'Sem e-mail'), nome ? el('div', { class: 'muted peq', text: v.email }) : null]),
+      el('td', null, [el('b', { text: v.votado })]),
+      el('td', { text: v.justificativa || '—' })
+    ]));
+  });
+}
+
+/* ---------- participação ---------- */
+function prepararParticipacao() {
+  var sel = $('fMesPart'), atual = sel.value || D.refAtual;
+  opcoes(sel, refsComVotos().map(function (r) { return { v: r, t: refLonga(r) + (r === D.refAtual ? ' (aberta)' : '') }; }), atual);
+  sel.onchange = renderParticipacao;
+  renderParticipacao();
+}
+function renderParticipacao() {
+  var ref = $('fMesPart').value, p = participacao(ref), n = D.time.length, pct = n ? Math.round(p.resp.length / n * 100) : 0;
+  $('partTitulo').textContent = 'Sprint ' + refLonga(ref) + (ref === D.refAtual ? ' · rodada aberta' : '');
+  $('partPct').textContent = p.resp.length + ' de ' + n + ' (' + pct + '%)' + (p.semEmail ? ' · ' + p.semEmail + ' voto(s) sem e-mail' : '');
+  $('partBarra').style.width = pct + '%';
+  $('tituloResp').textContent = 'Responderam (' + p.resp.length + ')';
+  $('tituloPend').textContent = 'Não responderam (' + p.pend.length + ')';
+
+  var ac = limpar($('partAcoes'));
+  if (ref === D.refAtual && p.pend.length) {
+    ac.appendChild(el('button', { class: 'btn btn-sec', text: 'Testar cobrança (só para mim)', onclick: function () { chamar('centralCobranca', true, this); } }));
+    ac.appendChild(el('button', { class: 'btn btn-pri', text: 'Cobrar ' + p.pend.length + ' pendente(s)', onclick: function () { acaoCobranca(this); } }));
+  } else if (ref !== D.refAtual) {
+    ac.appendChild(el('span', { class: 'muted peq', text: 'Mês encerrado: a lista de pendentes usa a composição atual da aba TIME.' }));
+  }
+
+  var lr = limpar($('listaResp'));
+  if (!p.resp.length) lr.appendChild(el('li', { class: 'muted', text: 'Ninguém respondeu ainda.' }));
+  p.resp.sort(function (a, b) { return (a.p.nome || a.p.email).localeCompare(b.p.nome || b.p.email); }).forEach(function (x) {
+    lr.appendChild(el('li', null, [
+      el('span', null, [el('b', { text: x.p.nome || x.p.email }), el('div', { class: 'muted peq', text: 'Votou em ' + x.v.votado })]),
+      el('span', { class: 'muted peq', text: x.v.data })
+    ]));
+  });
+  var lp = limpar($('listaPend'));
+  if (!p.pend.length) lp.appendChild(el('li', null, [el('span', { class: 'tag t-ok', text: 'Todo o time respondeu 🎉' })]));
+  p.pend.forEach(function (x) { lp.appendChild(el('li', null, [el('b', { text: x.nome || x.email }), el('span', { class: 'muted peq', text: x.email })])); });
+
+  var lf = limpar($('listaFora'));
+  $('cardFora').classList.toggle('oculto', !p.fora.length);
+  p.fora.forEach(function (v) { lf.appendChild(el('li', null, [el('span', null, [el('b', { text: v.email }), el('div', { class: 'muted peq', text: 'Votou em ' + v.votado + ' · não conta como resposta de ninguém do time' })]), el('span', { class: 'muted peq', text: v.data })])); });
+}
+function acaoCobranca(botao) {
+  var p = participacao(D.refAtual);
+  confirmar('Cobrar pendentes', 'Enviar o lembrete para ' + p.pend.length + ' pessoa(s) que ainda não votaram na sprint ' + refLonga(D.refAtual) + '?\n\n' + p.pend.map(function (x) { return '• ' + (x.nome || x.email); }).join('\n'),
+    null, function () { chamar('centralCobranca', false, botao); }, 'Enviar cobrança');
+}
+
+/* ---------- apurações ---------- */
+function prepararTrimestres() {
+  var sel = $('fTri'), atual = sel.value;
+  if (!atual) { var f = D.trimestres.filter(function (t) { return t.status === 'fechado'; })[0]; atual = f ? f.chave : (D.trimestres[0] || {}).chave; }
+  opcoes(sel, D.trimestres.map(function (t) { return { v: t.chave, t: t.rotulo + (t.status === 'andamento' ? ' (em andamento)' : '') }; }), atual);
+  sel.onchange = renderTrimestre;
+  renderTrimestre();
+}
+function triSel() { var c = $('fTri').value; return D.trimestres.filter(function (t) { return t.chave === c; })[0]; }
+function renderTrimestre() {
+  var t = triSel(), c = limpar($('triConteudo')), st = limpar($('triStatus'));
+  if (!t) { c.appendChild(el('div', { class: 'vazio', text: 'Nenhum trimestre com votos.' })); return; }
+  st.appendChild(t.status === 'andamento' ? el('span', { class: 'tag t-aviso', text: 'Em andamento · parcial' }) : el('span', { class: 'tag t-oficial', text: 'Fechado' }));
+  if (t.reconhecimentoEnviadoEm) st.appendChild(el('span', { class: 'tag t-ok', style: 'margin-left:6px', text: 'Reconhecimento enviado em ' + t.reconhecimentoEnviadoEm }));
+  if (!t.ranking.length) { c.appendChild(el('div', { class: 'card vazio', text: t.erro || 'Sem votos neste trimestre.' })); return; }
+
+  var nomeV, info;
+  if (t.oficial) { nomeV = t.oficial.vencedor; info = 'Vencedor oficial · ' + t.oficial.votos + ' votos' + (t.oficial.empate ? ' · decidido no desempate' : ''); }
+  else if (t.empate) { nomeV = 'Empate: ' + t.lideres.join(' e '); info = t.ranking[0].votos + ' votos cada · o desempate é escolhido no envio oficial'; }
+  else { nomeV = t.ranking[0].nome; info = (t.status === 'andamento' ? 'Liderando com ' : 'Vencedor com ') + t.ranking[0].votos + ' votos'; }
+  c.appendChild(el('div', { class: 'vencedor' }, [el('div', { class: 'trofeu', text: t.status === 'andamento' ? '⏳' : '🏆' }), el('div', null, [el('div', { class: 'nome', text: nomeV }), el('div', { class: 'info', text: info })])]));
+
+  var g = el('div', { class: 'grade g4', style: 'margin-bottom:14px' });
+  g.appendChild(kpi('Votos válidos', String(t.validos), 'Descartados: ' + t.duplicados + ' duplicado(s), ' + t.autovotos + ' autovoto(s)'));
+  t.refs.forEach(function (r) { g.appendChild(kpi('Sprint ' + refCurta(r), String(t.votosPorRef[r] || 0), (t.votosPorRef[r] ? 'votos válidos' : 'sem votos registrados'))); });
+  c.appendChild(g);
+
+  var max = t.ranking[0].votos, rk = el('div', { class: 'card ranking', style: 'margin-bottom:14px' }, [el('h2', { text: 'Ranking' })]);
+  t.ranking.forEach(function (p, i) {
+    rk.appendChild(el('div', { class: 'linha' + (p.votos === max ? ' lider' : '') }, [
+      el('span', { class: 'pos', text: (i + 1) + 'º' }), el('span', { class: 'nome', text: p.nome }),
+      el('div', { class: 'barra' }, [el('i', { style: 'width:' + Math.round(p.votos / max * 100) + '%' })]), el('span', { class: 'num', text: String(p.votos) })
+    ]));
+  });
+  c.appendChild(rk);
+
+  var dep = el('div', { class: 'card', style: 'margin-bottom:14px' }, [el('h2', { text: 'Justificativas recebidas' })]);
+  t.ranking.forEach(function (p, i) {
+    var d = el('details', i === 0 ? { open: '' } : null, [el('summary', null, [el('span', { text: p.nome }), el('span', { class: 'muted', text: p.depoimentos.length + ' mensagem(ns)' })])]);
+    if (!p.depoimentos.length) d.appendChild(el('div', { class: 'depo verde', text: 'Sem mensagens escritas.' }));
+    p.depoimentos.forEach(function (m) { d.appendChild(el('div', { class: 'depo' + (p.votos === max ? '' : ' verde'), text: m })); });
+    dep.appendChild(d);
+  });
+  c.appendChild(dep);
+
+  var acoes = el('div', { class: 'card' }, [el('h2', { text: '💌 E-mails de reconhecimento' }),
+    el('div', { class: 'muted', text: 'Vencedor com a squad em cópia, indicados em particular e você em cópia oculta. O teste manda todos só para você.' })]);
+  var box = el('div', { class: 'acoes' });
+  box.appendChild(el('button', { class: 'btn btn-sec', text: 'Testar e-mails', onclick: function () { chamar('centralReconhecimento', { chave: t.chave, modoTeste: true }, this); } }));
+  if (t.status === 'fechado') box.appendChild(el('button', { class: 'btn btn-ouro', text: t.reconhecimentoEnviadoEm ? 'Reenviar oficial' : 'Enviar oficial', onclick: function () { acaoReconhecimento(t, this); } }));
+  else box.appendChild(el('span', { class: 'muted peq', style: 'align-self:center', text: 'O envio oficial é liberado quando o trimestre fechar.' }));
+  acoes.appendChild(box);
+  c.appendChild(acoes);
+}
+function acaoReconhecimento(t, botao) {
+  var extra = null, sel = null;
+  var semEmail = t.ranking.filter(function (p) { return !D.time.some(function (x) { return norm(x.nome) === norm(p.nome); }); }).map(function (p) { return p.nome; });
+  var texto = 'Trimestre: ' + t.rotulo + '\nPessoas que recebem e-mail: ' + (t.ranking.length - semEmail.length) + ' de ' + t.ranking.length;
+  if (semEmail.length) texto += '\n\n⚠️ Sem e-mail na aba TIME (não recebem): ' + semEmail.join(', ');
+  if (t.reconhecimentoEnviadoEm) texto += '\n\n⚠️ Já enviado em ' + t.reconhecimentoEnviadoEm + '. Todos receberão de novo.';
+  if (t.empate) {
+    sel = el('select', { style: 'width:100%;margin-bottom:6px' });
+    t.lideres.forEach(function (n) { sel.appendChild(el('option', { value: n, text: n })); });
+    extra = el('div', { class: 'campo' }, [el('label', { text: 'Empate — escolha o vencedor' }), sel]);
+  } else {
+    texto = 'Vencedor: ' + t.ranking[0].nome + ' (' + t.ranking[0].votos + ' votos)\n' + texto;
+  }
+  confirmar('Enviar reconhecimento oficial', texto, extra, function () {
+    chamar('centralReconhecimento', { chave: t.chave, modoTeste: false, vencedor: sel ? sel.value : '', reenviar: !!t.reconhecimentoEnviadoEm }, botao);
+  }, 'Enviar e-mails');
+}
+
+/* ---------- ganhadores ---------- */
+function renderHall() {
+  var h = limpar($('hall'));
+  if (!D.trimestres.length) h.appendChild(el('div', { class: 'vazio', text: 'Nenhum trimestre ainda.' }));
+  D.trimestres.forEach(function (t) {
+    var nome, det, tag;
+    if (t.status === 'andamento') {
+      nome = t.ranking.length ? (t.empate ? 'Empate parcial' : t.ranking[0].nome) : '—';
+      det = t.ranking.length ? 'Liderando com ' + t.ranking[0].votos + ' votos' : 'Sem votos ainda';
+      tag = el('span', { class: 'tag t-aviso', text: 'Em andamento' });
+    } else if (t.oficial) {
+      nome = t.oficial.vencedor; det = t.oficial.votos + ' votos'; tag = el('span', { class: 'tag t-ok', text: 'Oficial · ' + t.oficial.enviadoEm.split(' ')[0] });
+    } else if (t.ranking.length) {
+      nome = t.empate ? 'Empate: ' + t.lideres.join(' e ') : t.ranking[0].nome;
+      det = t.ranking[0].votos + ' votos';
+      tag = t.reconhecimentoEnviadoEm ? el('span', { class: 'tag t-ok', text: 'Oficial · ' + t.reconhecimentoEnviadoEm.split(' ')[0] }) : el('span', { class: 'tag t-ouro', text: 'Reconhecimento pendente' });
+    } else { nome = '—'; det = t.erro || 'Sem votos'; tag = el('span', { class: 'tag t-teste', text: 'Sem dados' }); }
+    h.appendChild(el('div', { class: 'card' + (t.status === 'andamento' ? ' aberto' : ''), style: 'cursor:pointer', onclick: function () { $('fTri').value = t.chave; renderTrimestre(); mostrar('trimestres'); } }, [
+      el('div', { class: 'periodo', text: t.rotulo }), el('div', { class: 'quem', text: (t.status === 'fechado' && nome !== '—' ? '🏆 ' : '') + nome }),
+      el('div', { class: 'muted', style: 'margin-bottom:10px', text: det }), tag
+    ]));
+  });
+}
+
+/* ---------- envios ---------- */
+function prepararEnvios() {
+  var tipos = {}, meses = {};
+  D.envios.forEach(function (e) { tipos[e.tipo] = true; meses[e.data.substring(3, 10)] = true; });
+  opcoes($('fTipoEnv'), [{ v: '', t: 'Todos' }].concat(Object.keys(tipos).sort().map(function (t) { return { v: t, t: t }; })), $('fTipoEnv').value);
+  opcoes($('fMesEnv'), [{ v: '', t: 'Todos' }].concat(Object.keys(meses).sort(function (a, b) { return b.substring(3) + b.substring(0, 2) > a.substring(3) + a.substring(0, 2) ? 1 : -1; }).map(function (m) { return { v: m, t: MESES[+m.substring(0, 2) - 1] + ' ' + m.substring(3) }; })), $('fMesEnv').value);
+  ['fTipoEnv', 'fModoEnv', 'fMesEnv'].forEach(function (id) { $(id).onchange = renderEnvios; });
+  renderEnvios();
+}
+function renderEnvios() {
+  var tipo = $('fTipoEnv').value, modo = $('fModoEnv').value, mes = $('fMesEnv').value;
+  var lista = D.envios.filter(function (e) { return (!tipo || e.tipo === tipo) && (!modo || e.modo === modo) && (!mes || e.data.substring(3, 10) === mes); });
+  $('contEnv').textContent = lista.length + ' registro(s)';
+  var tb = limpar($('tbEnv'));
+  if (!lista.length) tb.appendChild(el('tr', null, [el('td', { colspan: 4, class: 'vazio', text: 'Nenhum envio para este filtro.' })]));
+  lista.forEach(function (e) { tb.appendChild(el('tr', null, [el('td', { text: e.data }), el('td', null, [el('b', { text: e.tipo })]), el('td', null, [tagModo(e.modo)]), el('td', { style: 'white-space:pre-wrap', text: e.detalhe })])); });
+}
+
+/* ---------- novos envios ---------- */
+var novoPreparado = false;
+function prepararNovo() {
+  var hoje = new Date(), ini = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1), fim = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+  if (!novoPreparado) {
+    $('nTitulo').value = 'Sprint ' + MESES[ini.getMonth()];
+    $('nInicio').value = iso(ini); $('nFim').value = iso(fim);
+    var pj = limpar($('nProjetos'));
+    D.projetos.forEach(function (p) { pj.appendChild(el('label', null, [el('input', { type: 'checkbox', value: p, checked: '' }), p])); });
+    $('nInicio').onchange = function () { var d = new Date($('nInicio').value + 'T12:00:00'); if (!isNaN(d)) $('nTitulo').value = 'Sprint ' + MESES[d.getMonth()]; };
+    $('nTeste').onchange = descModo;
+    $('btnFormulario').onclick = acaoFormulario;
+    document.querySelectorAll('[data-acao]').forEach(function (b) { b.onclick = function () { acaoSimples(b.getAttribute('data-acao'), b); }; });
+    novoPreparado = true;
+  }
+  descModo();
+  var p = participacao(D.refAtual);
+  $('nCobrancaInfo').textContent = 'Rodada aberta: sprint ' + refLonga(D.refAtual) + ' · ' + p.pend.length + ' pendente(s). Automática em ' + (D.proximas.cobranca || '—') + '.';
+  var f = D.trimestres.filter(function (t) { return t.status === 'fechado'; })[0];
+  $('nApuracaoInfo').textContent = 'Apura o último trimestre fechado' + (f ? ' (' + f.rotulo + ')' : '') + ' e envia o resultado só para você. Automática em ' + (D.proximas.apuracao || '—') + '.';
+}
+function descModo() {
+  $('nModoDesc').textContent = $('nTeste').checked
+    ? 'Teste: consulta o Jira e manda a prévia só para você. Formulário e respostas não mudam.'
+    : 'Oficial: grava as respostas no Histórico, atualiza o formulário (zera as respostas se for uma nova sprint) e envia para a squad.';
+  $('btnFormulario').textContent = $('nTeste').checked ? 'Executar teste' : 'Enviar oficial para a squad';
+}
+function acaoFormulario() {
+  var botao = this;
+  var dados = {
+    tituloSprint: $('nTitulo').value,
+    projetos: Array.prototype.map.call(document.querySelectorAll('#nProjetos input:checked'), function (c) { return c.value; }),
+    dataInicio: $('nInicio').value, dataFim: $('nFim').value, dataEnvioSimulada: $('nSimulada').value,
+    modoTeste: $('nTeste').checked
+  };
+  if (dados.modoTeste) return chamar('centralDispararFormulario', dados, botao);
+  var novaRef = dados.dataInicio.substring(0, 7);
+  var texto = 'Sprint ' + refLonga(novaRef) + ' · entregas de ' + dados.dataInicio.split('-').reverse().join('/') + ' a ' + dados.dataFim.split('-').reverse().join('/') + '.\n\n';
+  texto += novaRef !== D.refAtual
+    ? 'As respostas da sprint ' + refLonga(D.refAtual) + ' serão gravadas no Histórico e o formulário será zerado para a nova votação. O e-mail vai para a squad.'
+    : 'A sprint ' + refLonga(novaRef) + ' já está aberta: o formulário é atualizado, as respostas são mantidas e o e-mail é reenviado à squad.';
+  confirmar('Enviar formulário oficial', texto, null, function () { chamar('centralDispararFormulario', dados, botao); }, 'Enviar para a squad');
+}
+function acaoSimples(acao, botao) {
+  if (acao === 'cobrancaTeste') return chamar('centralCobranca', true, botao);
+  if (acao === 'cobranca') return acaoCobranca(botao);
+  if (acao === 'apuracaoTeste') return chamar('centralApuracao', true, botao);
+  if (acao === 'historico') return chamar('centralGravarHistorico', null, botao);
+  if (acao === 'apuracao') return confirmar('Fechamento oficial', 'Apurar o último trimestre fechado e enviar o resultado para você (registro oficial na aba Logs)?', null, function () { chamar('centralApuracao', false, botao); });
+}
+
+carregar();
+</script>
+</body>
+</html>
